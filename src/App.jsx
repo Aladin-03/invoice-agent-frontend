@@ -3,6 +3,8 @@ import './App.css'
 import Header from './components/Header'
 import ControlsSection from './components/ControlsSection'
 import RatesModal from './components/RatesModal'
+import InvoiceProcessing from './components/InvoiceProcessing'
+import { API_CONFIG } from './config'
 import { 
   fetchVendors, 
   fetchVendorDetails, 
@@ -125,30 +127,40 @@ function App() {
     document.body.removeChild(link)
   }
 
-  return (
+   return (
     <div className="app">
       <div className="container">
         <Header />
 
         <main>
-          <ControlsSection
-            vendors={vendors}
-            selectedVendor={selectedVendor}
-            setSelectedVendor={setSelectedVendor}
-            vendorDetails={vendorDetails}
-            selectedVersion={selectedVersion}
-            setSelectedVersion={setSelectedVersion}
-            loading={loading}
-            uploadFile={uploadFile}
-            setUploadFile={setUploadFile}
-            uploading={uploading}
-            uploadSuccess={uploadSuccess}
-            onViewRates={handleViewRates}
-            onUploadRateCard={handleUploadRateCard}
-            onDownloadTemplate={handleDownloadTemplate}
-          />
+          {/* Rates Section */}
+          <section>
+            <h2 className="section-title">Rate Cards Management</h2>
+            <ControlsSection
+              vendors={vendors}
+              selectedVendor={selectedVendor}
+              setSelectedVendor={setSelectedVendor}
+              vendorDetails={vendorDetails}
+              selectedVersion={selectedVersion}
+              setSelectedVersion={setSelectedVersion}
+              loading={loading}
+              uploadFile={uploadFile}
+              setUploadFile={setUploadFile}
+              uploading={uploading}
+              uploadSuccess={uploadSuccess}
+              onViewRates={handleViewRates}
+              onUploadRateCard={handleUploadRateCard}
+              onDownloadTemplate={handleDownloadTemplate}
+            />
 
-          {loading && <div className="loading">Loading...</div>}
+            {loading && <div className="loading">Loading...</div>}
+          </section>
+
+          {/* Invoice Processing Section */}
+          <section>
+            <h2 className="section-title">Invoice Processing</h2>
+            <InvoiceProcessing apiBaseUrl={API_CONFIG.BASE_URL} />
+          </section>
         </main>
       </div>
 

@@ -1,0 +1,307 @@
+import { useState } from 'react'
+import './InvoiceProcessing.css'
+
+function InvoiceProcessing({ apiBaseUrl }) {
+  const [pdfFile, setPdfFile] = useState(null)
+  const [processing, setProcessing] = useState(false)
+  const [invoiceData, setInvoiceData] = useState(null)
+  const [error, setError] = useState(null)
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0]
+    if (file && file.type === 'application/pdf') {
+      setPdfFile(file)
+      setError(null)
+    } else {
+      setError('Please select a valid PDF file')
+      setPdfFile(null)
+    }
+  }
+
+  const handleProcessInvoice = async () => {
+    if (!pdfFile) {
+      setError('Please select a PDF file first')
+      return
+    }
+
+    setProcessing(true)
+    setError(null)
+    
+    const formData = new FormData()
+    formData.append('invoice_file', pdfFile)
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/invoices/parse`, {
+        method: 'POST',
+        body: formData
+      })
+      
+      const result = await response.json()
+      
+      if (result.success) {
+        setInvoiceData(result.data)
+        setError(null)
+      } else {
+        setError(result.message || 'Failed to process invoice')
+        setInvoiceData(null)
+      }
+    } catch (err) {
+      console.error('Error processing invoice:', err)
+      setError('Error processing invoice: ' + err.message)
+      setInvoiceData(null)
+    }
+    
+    setProcessing(false)
+  }
+
+  const formatCurrency = (amount) => {
+    if (amount === null || amount === undefined) return '—'
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
+  }
+
+  const formatLabel = (key) => {
+    return key
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  const getRiskLevelClass = (riskLevel) => {
+    switch (riskLevel) {
+      case 'CRITICAL': return 'risk-critical'
+      case 'HIGH': return 'risk-high'
+      case 'MEDIUM': return 'risk-medium'
+      case 'LOW': return 'risk-low'
+      default: return ''
+    }
+  }
+
+  const renderPickupDetails = (pickup) => {
+    return (
+      <div className="location-details">
+        <div className="location-name">{pickup.name}</div>
+        <div className="location-info">{pickup.address}</div>
+        <div className="location-info">{pickup.city_state_zip}</div>
+        <div className="location-meta">
+          <span>Caller: {pickup.caller}</span>
+          <span>Call: {pickup.call_time}</span>
+        </div>
+        <div className="location-meta">
+          <span>Ref: {pickup.reference_number}</span>
+          <span>Pickup: {pickup.pickup_time}</span>
+        </div>
+      </div>
+    )
+  }
+
+  const renderDeliveryDetails = (delivery) => {
+    return (
+      <div className="location-details">
+        <div className="location-name">{delivery.name}</div>
+        <div className="location-info">{delivery.address}</div>
+        <div className="location-info">{delivery.city_state_zip}</div>
+      </div>
+    )
+  }
+
+  const renderCharges = (charges) => {
+    const chargeLabels = {
+      base: 'Base',
+      weight_pcs: 'Weight/Pcs',
+      vehicle: 'Vehicle',
+      wkd_hol_ot: 'Wkd/Hol/OT',
+      fuel_surcharge: 'Fuel',
+      wait_time: 'Wait Time'
+    }
+
+    return (
+      <div className="charges-list">
+        {Object.entries(charges).map(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            return (
+              <div key={key} className="charge-item">
+                <span className="charge-label">{chargeLabels[key] || key}:</span>
+                <span className="charge-value">{formatCurrency(value)}</span>
+              </div>
+            )
+          }
+          return null
+        })}
+      </div>
+    )
+  }
+
+  return (
+    <div className="invoice-processing">
+      {/* Upload Section */}
+      <div className="card">
+        <h2>Process Invoice</h2>
+        <div className="upload-section">
+          <div className="file-upload-group">
+            <label htmlFor="pdf-upload" className="file-input-label">
+              {pdfFile ? pdfFile.name : 'Choose PDF file'}
+            </label>
+            <input
+              id="pdf-upload"
+              type="file"
+              accept=".pdf"
+              onChange={handleFileSelect}
+              className="file-input-hidden"
+            />
+          </div>
+          
+          <button
+            className="button button-full"
+            onClick={handleProcessInvoice}
+            disabled={!pdfFile || processing}
+            style={{ maxWidth: '200px' }}
+          >
+            {processing ? 'Processing...' : 'Process Invoice'}
+          </button>
+        </div>
+
+        {error && (
+          <div className="error-message">
+            ⚠ {error}
+          </div>
+        )}
+      </div>
+
+      {/* Results */}
+      {invoiceData && (
+        <>
+          {/* Header Table */}
+          <div className="card">
+            <h3>Invoice Header</h3>
+            <div className="header-table-container">
+              <table className="header-table">
+                <tbody>
+                  {Object.entries(invoiceData.header).map(([key, value]) => (
+                    <tr key={key}>
+                      <td className="header-label">{formatLabel(key)}</td>
+                      <td className="header-value">
+                        {key === 'total_due' ? formatCurrency(value) : value}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Main Table */}
+          <div className="card">
+            <h3>Invoice Details ({invoiceData.main_table.length} records)</h3>
+            <div className="main-table-container">
+              <table className="main-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '80px' }}>Date</th>
+                    <th style={{ width: '100px' }}>Order No</th>
+                    <th style={{ width: '80px' }}>Service</th>
+                    <th style={{ width: '220px' }}>Pickup</th>
+                    <th style={{ width: '180px' }}>Delivery</th>
+                    <th style={{ width: '160px' }}>Charges</th>
+                    <th style={{ width: '100px' }}>Total</th>
+                    <th style={{ width: '150px' }}>Note</th>
+                    <th style={{ width: '100px' }}>Risk</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoiceData.main_table.map((record, index) => (
+                    <tr 
+                      key={index}
+                      className={record.flags.fraud ? 'fraud-row' : ''}
+                    >
+                      <td>{record.date}</td>
+                      <td><strong>{record.order_no}</strong></td>
+                      <td>
+                        <span className="service-badge">{record.service_type}</span>
+                      </td>
+                      <td className="location-cell">
+                        {renderPickupDetails(record.pickup_details)}
+                      </td>
+                      <td className="location-cell">
+                        {renderDeliveryDetails(record.delivery_details)}
+                      </td>
+                      <td className="charges-cell">
+                        {renderCharges(record.charges)}
+                      </td>
+                      <td className="total-cell">
+                        <strong>{formatCurrency(record.total)}</strong>
+                      </td>
+                      <td className="note-cell">
+                        {record.note && (
+                          <span className="note-text" title={record.note}>
+                            {record.note}
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`risk-badge ${getRiskLevelClass(record.flags.risk_level)}`}>
+                          {record.flags.risk_level}
+                        </span>
+                        {record.flags.fraud && (
+                          <span className="fraud-flag">🚨 FRAUD</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Summary Section */}
+          <div className="card">
+            <h3>Invoice Summary</h3>
+            <div className={`summary-container ${invoiceData.summary.fraud_detected ? 'fraud-detected' : ''}`}>
+              <div className="summary-grid">
+                <div className="summary-item">
+                  <span className="summary-label">Total Records</span>
+                  <span className="summary-value">{invoiceData.summary.total_records}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Calculated Total</span>
+                  <span className="summary-value">{formatCurrency(invoiceData.summary.calculated_total)}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Header Total</span>
+                  <span className="summary-value">{formatCurrency(invoiceData.summary.header_total)}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="summary-label">Total Discrepancy</span>
+                  <span className="summary-value discrepancy">
+                    {formatCurrency(invoiceData.summary.total_discrepancy)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="validation-status">
+                <div className={`status-badge ${invoiceData.summary.fraud_detected ? 'status-fraud' : 'status-valid'}`}>
+                  {invoiceData.summary.validation_status}
+                </div>
+                
+                {invoiceData.summary.fraud_detected && (
+                  <div className="fraud-details">
+                    <span className="fraud-count">
+                      🚨 {invoiceData.summary.total_fraud_discrepancies} Fraud Alert(s)
+                    </span>
+                    <span className="fraud-amount">
+                      Fraudulent Amount: {formatCurrency(invoiceData.summary.total_fraudulent_amount)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+export default InvoiceProcessing
