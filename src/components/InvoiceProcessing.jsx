@@ -54,6 +54,15 @@ function InvoiceProcessing({ apiBaseUrl }) {
     setProcessing(false)
   }
 
+  const handleDownloadTemplate = () => {
+    const link = document.createElement('a')
+    link.href = '/invoice_template.pdf'
+    link.download = 'invoice_template.pdf'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) return '—'
     return new Intl.NumberFormat('en-US', {
@@ -161,6 +170,14 @@ function InvoiceProcessing({ apiBaseUrl }) {
           >
             {processing ? 'Processing...' : 'Process Invoice'}
           </button>
+
+          <button
+            className="button button-secondary button-full"
+            onClick={handleDownloadTemplate}
+            style={{ maxWidth: '200px' }}
+          >
+            Download Template
+          </button>
         </div>
 
         {error && (
@@ -214,7 +231,7 @@ function InvoiceProcessing({ apiBaseUrl }) {
                   {invoiceData.main_table.map((record, index) => (
                     <tr 
                       key={index}
-                      className={record.flags.fraud ? 'fraud-row' : ''}
+                      className={record.flags.fraud ? 'tamper-row' : ''}
                     >
                       <td>{record.date}</td>
                       <td><strong>{record.order_no}</strong></td>
@@ -245,7 +262,7 @@ function InvoiceProcessing({ apiBaseUrl }) {
                           {record.flags.risk_level}
                         </span>
                         {record.flags.fraud && (
-                          <span className="fraud-flag">🚨 FRAUD</span>
+                          <span className="tamper-flag">⚠️ TAMPERED</span>
                         )}
                       </td>
                     </tr>
@@ -258,7 +275,7 @@ function InvoiceProcessing({ apiBaseUrl }) {
           {/* Summary Section */}
           <div className="card">
             <h3>Invoice Summary</h3>
-            <div className={`summary-container ${invoiceData.summary.fraud_detected ? 'fraud-detected' : ''}`}>
+            <div className={`summary-container ${invoiceData.summary.fraud_detected ? 'tamper-detected' : ''}`}>
               <div className="summary-grid">
                 <div className="summary-item">
                   <span className="summary-label">Total Records</span>
@@ -281,17 +298,17 @@ function InvoiceProcessing({ apiBaseUrl }) {
               </div>
 
               <div className="validation-status">
-                <div className={`status-badge ${invoiceData.summary.fraud_detected ? 'status-fraud' : 'status-valid'}`}>
-                  {invoiceData.summary.validation_status}
+                <div className={`status-badge ${invoiceData.summary.fraud_detected ? 'status-tamper' : 'status-valid'}`}>
+                  {invoiceData.summary.validation_status.replace('FRAUD', 'TAMPER')}
                 </div>
                 
                 {invoiceData.summary.fraud_detected && (
-                  <div className="fraud-details">
-                    <span className="fraud-count">
-                      🚨 {invoiceData.summary.total_fraud_discrepancies} Fraud Alert(s)
+                  <div className="tamper-details">
+                    <span className="tamper-count">
+                      ⚠️ {invoiceData.summary.total_fraud_discrepancies} Tamper Alert(s)
                     </span>
-                    <span className="fraud-amount">
-                      Fraudulent Amount: {formatCurrency(invoiceData.summary.total_fraudulent_amount)}
+                    <span className="tamper-amount">
+                      Tampered Amount: {formatCurrency(invoiceData.summary.total_fraudulent_amount)}
                     </span>
                   </div>
                 )}

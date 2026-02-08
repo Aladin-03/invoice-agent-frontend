@@ -95,12 +95,12 @@
   background: var(--hover-bg);
 }
 
-.fraud-row {
+.tamper-row {
   background: #fff5f5 !important;
   border-left: 3px solid #dc2626;
 }
 
-.fraud-row:hover {
+.tamper-row:hover {
   background: #fee !important;
 }
 
@@ -242,7 +242,7 @@
   border: 1px solid #a7f3d0;
 }
 
-.fraud-flag {
+.tamper-flag {
   display: block;
   margin-top: 4px;
   font-size: 10px;
@@ -257,7 +257,7 @@
   border-radius: 8px;
 }
 
-.summary-container.fraud-detected {
+.summary-container.tamper-detected {
   background: #fff5f5;
   border: 2px solid #fca5a5;
 }
@@ -317,7 +317,7 @@
   border: 2px solid #059669;
 }
 
-.status-fraud {
+.status-tamper {
   background: #fee;
   color: #dc2626;
   border: 2px solid #dc2626;
@@ -329,20 +329,20 @@
   50% { opacity: 0.8; }
 }
 
-.fraud-details {
+.tamper-details {
   display: flex;
   flex-direction: column;
   gap: 8px;
   align-items: flex-end;
 }
 
-.fraud-count {
+.tamper-count {
   font-size: 16px;
   font-weight: 700;
   color: #dc2626;
 }
 
-.fraud-amount {
+.tamper-amount {
   font-size: 20px;
   font-weight: 700;
   color: #dc2626;
