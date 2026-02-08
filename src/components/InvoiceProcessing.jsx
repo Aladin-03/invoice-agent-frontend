@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import './InvoiceProcessing.css'
 
-function InvoiceProcessing({ apiBaseUrl }) {
+function InvoiceProcessing({ 
+  apiBaseUrl, 
+  selectedVendor, 
+  selectedVersion,
+  vendors,
+  vendorDetails 
+}) {
   const [pdfFile, setPdfFile] = useState(null)
   const [processing, setProcessing] = useState(false)
   const [invoiceData, setInvoiceData] = useState(null)
@@ -24,11 +30,23 @@ function InvoiceProcessing({ apiBaseUrl }) {
       return
     }
 
+    if (!selectedVendor) {
+      setError('Please select a vendor from the Rate Cards section above')
+      return
+    }
+
+    if (!selectedVersion) {
+      setError('Please select a rate card version from the Rate Cards section above')
+      return
+    }
+
     setProcessing(true)
     setError(null)
     
     const formData = new FormData()
     formData.append('invoice_file', pdfFile)
+    formData.append('vendor_code', selectedVendor)
+    formData.append('version_id', selectedVersion)
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/invoices/parse`, {
@@ -143,11 +161,28 @@ function InvoiceProcessing({ apiBaseUrl }) {
     )
   }
 
+  // Get selected vendor and version names for display
+  const selectedVendorName = vendors.find(v => v.vendor_code === selectedVendor)?.vendor_name || 'None'
+  const selectedVersionId = selectedVersion || 'None'
+
   return (
     <div className="invoice-processing">
       {/* Upload Section */}
       <div className="card">
         <h2>Process Invoice</h2>
+        
+        {/* Display selected rate card info */}
+        <div className="selected-rate-info">
+          <div className="info-badge">
+            <span className="info-label">Selected Vendor:</span>
+            <span className="info-value">{selectedVendorName}</span>
+          </div>
+          <div className="info-badge">
+            <span className="info-label">Selected Version:</span>
+            <span className="info-value">{selectedVersionId}</span>
+          </div>
+        </div>
+
         <div className="upload-section">
           <div className="file-upload-group">
             <label htmlFor="pdf-upload" className="file-input-label">
@@ -165,7 +200,7 @@ function InvoiceProcessing({ apiBaseUrl }) {
           <button
             className="button button-full"
             onClick={handleProcessInvoice}
-            disabled={!pdfFile || processing}
+            disabled={!pdfFile || !selectedVendor || !selectedVersion || processing}
             style={{ maxWidth: '200px' }}
           >
             {processing ? 'Processing...' : 'Process Invoice'}

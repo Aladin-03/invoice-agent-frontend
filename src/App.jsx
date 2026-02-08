@@ -42,7 +42,7 @@ function App() {
       const data = await fetchVendors()
       if (data.success) {
         setVendors(data.vendors)
-        if (data.vendors.length > 0) {
+        if (data.vendors.length > 0 && !selectedVendor) {
           setSelectedVendor(data.vendors[0].vendor_code)
         }
       }
@@ -106,8 +106,18 @@ function App() {
         setUploadSuccess(data)
         setUploadFile(null)
         document.getElementById('file-upload').value = ''
+        
+        // Set the uploaded vendor as selected
+        setSelectedVendor(data.vendor_code)
+        
+        // Refresh vendor details for the uploaded vendor
+        await loadVendorDetails(data.vendor_code)
+        
         // Refresh vendors list
-        loadVendors()
+        await loadVendors()
+        
+        // Auto-select the newly uploaded version
+        setSelectedVersion(data.version_id)
       } else {
         alert('Upload failed: ' + (data.message || 'Unknown error'))
       }
@@ -127,7 +137,7 @@ function App() {
     document.body.removeChild(link)
   }
 
-   return (
+  return (
     <div className="app">
       <div className="container">
         <Header />
@@ -159,7 +169,13 @@ function App() {
           {/* Invoice Processing Section */}
           <section>
             <h2 className="section-title">Invoice Processing</h2>
-            <InvoiceProcessing apiBaseUrl={API_CONFIG.BASE_URL} />
+            <InvoiceProcessing 
+              apiBaseUrl={API_CONFIG.BASE_URL}
+              selectedVendor={selectedVendor}
+              selectedVersion={selectedVersion}
+              vendors={vendors}
+              vendorDetails={vendorDetails}
+            />
           </section>
         </main>
       </div>

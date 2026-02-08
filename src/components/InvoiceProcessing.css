@@ -381,4 +381,37 @@
   .summary-value {
     font-size: 20px;
   }
+  /* Selected Rate Info */
+    .selected-rate-info {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    flex-wrap: wrap;
+    }
+
+    .info-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-primary);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    }
+
+    .info-badge .info-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    }
+
+    .info-badge .info-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 600;
+    }
+
 }
