@@ -20,7 +20,7 @@ export const fetchVersionData = async (vendorCode, versionId) => {
 
 export const uploadRateCard = async (file) => {
   const formData = new FormData()
-  formData.append('file', file)
+  formData.append('rate_file', file)
   
   const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD}`, {
     method: 'POST',
