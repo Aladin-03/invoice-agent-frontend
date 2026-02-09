@@ -5,13 +5,14 @@ function InvoiceProcessing({
   apiBaseUrl, 
   selectedVendor, 
   selectedVersion,
-  vendors,
+  vendors = [],
   vendorDetails 
 }) {
   const [pdfFile, setPdfFile] = useState(null)
   const [processing, setProcessing] = useState(false)
   const [invoiceData, setInvoiceData] = useState(null)
   const [error, setError] = useState(null)
+  const [enableOcr, setEnableOcr] = useState(false)
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
@@ -47,6 +48,7 @@ function InvoiceProcessing({
     formData.append('invoice_file', pdfFile)
     formData.append('vendor_code', selectedVendor)
     formData.append('version_id', selectedVersion)
+    formData.append('enable_ocr', enableOcr)
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/invoices/parse`, {
@@ -162,8 +164,8 @@ function InvoiceProcessing({
   }
 
   // Get selected vendor and version names for display
-  const selectedVendorName = vendors.find(v => v.vendor_code === selectedVendor)?.vendor_name || 'None'
-  const selectedVersionId = selectedVersion || 'None'
+  const selectedVendorName = vendors?.find(v => v.vendor_code === selectedVendor)?.vendor_name || 'None selected'
+  const selectedVersionId = selectedVersion || 'None selected'
 
   return (
     <div className="invoice-processing">
@@ -195,6 +197,19 @@ function InvoiceProcessing({
               onChange={handleFileSelect}
               className="file-input-hidden"
             />
+          </div>
+
+          {/* OCR Checkbox */}
+          <div className="ocr-checkbox-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={enableOcr}
+                onChange={(e) => setEnableOcr(e.target.checked)}
+                className="checkbox-input"
+              />
+              <span className="checkbox-text">Enable OCR-based tamper detection</span>
+            </label>
           </div>
           
           <button
@@ -311,6 +326,7 @@ function InvoiceProcessing({
           <div className="card">
             <h3>Invoice Summary</h3>
             <div className={`summary-container ${invoiceData.summary.fraud_detected ? 'tamper-detected' : ''}`}>
+              {/* Main Summary Grid */}
               <div className="summary-grid">
                 <div className="summary-item">
                   <span className="summary-label">Total Records</span>
@@ -332,23 +348,167 @@ function InvoiceProcessing({
                 </div>
               </div>
 
+              {/* Validation Status with Total Extra Charges */}
               <div className="validation-status">
-                <div className={`status-badge ${invoiceData.summary.fraud_detected ? 'status-tamper' : 'status-valid'}`}>
-                  {invoiceData.summary.validation_status.replace('FRAUD', 'TAMPER')}
+              {/* Status Badge - only show REVIEW if there's a discrepancy */}
+              {invoiceData.summary.extra_charges.total_extra_charges !== 0 && (
+                <div className="status-badge status-review">
+                  NEED REVIEW
                 </div>
-                
-                {invoiceData.summary.fraud_detected && (
-                  <div className="tamper-details">
-                    <span className="tamper-count">
-                      ⚠️ {invoiceData.summary.total_fraud_discrepancies} Tamper Alert(s)
-                    </span>
-                    <span className="tamper-amount">
-                      Tampered Amount: {formatCurrency(invoiceData.summary.total_fraudulent_amount)}
-                    </span>
-                  </div>
-                )}
-              </div>
+              )}
+              
+              {/* PASSED Badge - show when no discrepancy and no fraud */}
+              {invoiceData.summary.total_discrepancy === 0 && !invoiceData.summary.extra_charges.total_extra_charges && (
+                <div className="status-badge status-valid">
+                  PASSED
+                </div>
+              )}
+              
+              {/* TAMPER Badge - show when fraud detected */}
+              {invoiceData.summary.fraud_detected && (
+                <div className="status-badge status-tamper">
+                  TAMPER_DETECTED
+                </div>
+              )}
+
+              {/* Total Extra Charges - always show if available */}
+              {invoiceData.summary.extra_charges?.total_extra_charges !== undefined && (
+                <div className="extra-charges-summary">
+                  <span className="extra-charges-label">Total Extra Charges</span>
+                  <span className="extra-charges-value">
+                    {formatCurrency(invoiceData.summary.extra_charges.total_extra_charges)}
+                  </span>
+                </div>
+              )}
+              
+              {/* Tamper Details */}
+              {invoiceData.summary.fraud_detected && (
+                <div className="tamper-details">
+                  <span className="tamper-count">
+                    ⚠️ {invoiceData.summary.total_fraud_discrepancies} Tamper Alert(s)
+                  </span>
+                  <span className="tamper-amount">
+                    Tampered Amount: {formatCurrency(invoiceData.summary.total_fraudulent_amount)}
+                  </span>
+                </div>
+              )}
             </div>
+
+            </div>
+
+            {/* Base Charges Analysis */}
+            {invoiceData.summary.base_charges && (
+              <div className="analysis-section">
+                <h4>Base Charges Analysis</h4>
+                <div className="analysis-grid">
+                  <div className="analysis-card">
+                    <div className="analysis-header">Under Charged</div>
+                    <div className="analysis-content">
+                      <div className="analysis-count">{invoiceData.summary.base_charges.under_charged}</div>
+                      <div className="analysis-label">items</div>
+                      <div className="analysis-amount under">{formatCurrency(invoiceData.summary.base_charges.under_charged_amount)}</div>
+                    </div>
+                  </div>
+                  <div className="analysis-card">
+                    <div className="analysis-header">Over Charged</div>
+                    <div className="analysis-content">
+                      <div className="analysis-count">{invoiceData.summary.base_charges.over_charged}</div>
+                      <div className="analysis-label">items</div>
+                      <div className="analysis-amount over">{formatCurrency(invoiceData.summary.base_charges.over_charged_amount)}</div>
+                    </div>
+                  </div>
+                  <div className="analysis-card">
+                    <div className="analysis-header">Total Items</div>
+                    <div className="analysis-content">
+                      <div className="analysis-count total">{invoiceData.summary.base_charges.total_items}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Weekend/Holiday/OT Analysis */}
+            {invoiceData.summary.wkd_hol_ot && (
+              <div className="analysis-section">
+                <h4>Weekend/Holiday/OT Charges</h4>
+                <div className="analysis-grid">
+                  <div className="analysis-card">
+                    <div className="analysis-header">Valid Charges</div>
+                    <div className="analysis-content">
+                      <div className="analysis-count">{invoiceData.summary.wkd_hol_ot.valid}</div>
+                      <div className="analysis-label">items</div>
+                      <div className="analysis-amount matched">{formatCurrency(invoiceData.summary.wkd_hol_ot.valid_amount)}</div>
+                    </div>
+                  </div>
+                  <div className="analysis-card">
+                    <div className="analysis-header">Invalid Charges</div>
+                    <div className="analysis-content">
+                      <div className="analysis-count">{invoiceData.summary.wkd_hol_ot.invalid}</div>
+                      <div className="analysis-label">items</div>
+                      <div className="analysis-amount over">{formatCurrency(invoiceData.summary.wkd_hol_ot.invalid_amount)}</div>
+                    </div>
+                  </div>
+                  <div className="analysis-card">
+                    <div className="analysis-header">Total Items</div>
+                    <div className="analysis-content">
+                      <div className="analysis-count total">{invoiceData.summary.wkd_hol_ot.total_items}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Service Types Breakdown */}
+            {invoiceData.summary.service_types && (
+              <div className="analysis-section">
+                <h4>Service Types Breakdown</h4>
+                <div className="service-types-grid">
+                  {Object.entries(invoiceData.summary.service_types).map(([type, data]) => (
+                    <div key={type} className="service-type-card">
+                      <div className="service-type-badge">{type}</div>
+                      <div className="service-type-details">
+                        <div className="service-type-count">{data.count} shipments</div>
+                        <div className="service-type-amount">{formatCurrency(data.total_amount)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Extra Charges */}
+            {invoiceData.summary.extra_charges && (
+              <div className="analysis-section">
+                <h4>Extra Charges Breakdown</h4>
+                <div className="extra-charges-grid">
+                  {invoiceData.summary.extra_charges.fuel_surcharge && (
+                    <div className="extra-charge-card">
+                      <div className="extra-charge-label">Fuel Surcharge</div>
+                      <div className="extra-charge-count">{invoiceData.summary.extra_charges.fuel_surcharge.count} items</div>
+                      <div className="extra-charge-amount">{formatCurrency(invoiceData.summary.extra_charges.fuel_surcharge.total_amount)}</div>
+                    </div>
+                  )}
+                  {invoiceData.summary.extra_charges.vehicle_charge && (
+                    <div className="extra-charge-card">
+                      <div className="extra-charge-label">Vehicle Charge</div>
+                      <div className="extra-charge-count">{invoiceData.summary.extra_charges.vehicle_charge.count} items</div>
+                      <div className="extra-charge-amount">{formatCurrency(invoiceData.summary.extra_charges.vehicle_charge.total_amount)}</div>
+                    </div>
+                  )}
+                  {invoiceData.summary.extra_charges.additional_charge && (
+                    <div className="extra-charge-card">
+                      <div className="extra-charge-label">Additional Charge</div>
+                      <div className="extra-charge-count">{invoiceData.summary.extra_charges.additional_charge.count} items</div>
+                      <div className="extra-charge-amount">{formatCurrency(invoiceData.summary.extra_charges.additional_charge.total_amount)}</div>
+                    </div>
+                  )}
+                  <div className="extra-charge-card total-card">
+                    <div className="extra-charge-label">Total Extra Charges</div>
+                    <div className="extra-charge-amount total">{formatCurrency(invoiceData.summary.extra_charges.total_extra_charges)}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}

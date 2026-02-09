@@ -24,6 +24,76 @@
   border: 1px solid #fcc;
 }
 
+/* Selected Rate Info */
+.selected-rate-info {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.info-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.info-badge .info-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.info-badge .info-value {
+  font-size: 14px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* OCR Checkbox */
+.ocr-checkbox-group {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  min-width: 250px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  margin: 0;
+  user-select: none;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--bg-dark);
+}
+
+.checkbox-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.checkbox-label:hover .checkbox-text {
+  color: var(--bg-dark);
+}
+
 /* Header Table */
 .header-table-container {
   overflow-x: auto;
@@ -54,7 +124,7 @@
 .main-table-container {
   overflow-x: auto;
   overflow-y: auto;
-  max-height: 500px;
+  max-height: 600px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   position: relative;
@@ -250,39 +320,45 @@
   color: #dc2626;
 }
 
-/* Summary Section */
+/* Summary Container */
 .summary-container {
-  padding: 20px;
-  background: var(--bg-secondary);
+  padding: 24px;
+  background: var(--bg-primary);
   border-radius: 8px;
+  border: 1px solid var(--border-color);
 }
 
 .summary-container.tamper-detected {
   background: #fff5f5;
-  border: 2px solid #fca5a5;
+  border: 2px solid #dc2626;
 }
 
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .summary-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
 }
 
 .summary-label {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .summary-value {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -296,19 +372,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
 }
 
 .status-badge {
-  padding: 12px 24px;
+  padding: 12px 32px;
   border-radius: 8px;
   font-weight: 700;
   font-size: 16px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
 }
 
 .status-valid {
@@ -348,6 +426,204 @@
   color: #dc2626;
 }
 
+/* Analysis Sections */
+.analysis-section {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.analysis-section h4 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+/* Analysis Grid - 4 columns */
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.analysis-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.analysis-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: var(--text-primary);
+}
+
+.analysis-header {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.analysis-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analysis-count {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.analysis-count.total {
+  color: #6366f1;
+}
+
+.analysis-amount {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.analysis-amount.under {
+  color: #f59e0b;
+}
+
+.analysis-amount.over {
+  color: #dc2626;
+}
+
+.analysis-amount.matched {
+  color: #059669;
+  font-size: 16px;
+}
+
+/* Service Types Grid */
+.service-types-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.service-type-card {
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.service-type-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+  border-color: var(--bg-dark);
+}
+
+.service-type-badge {
+  background: var(--bg-dark);
+  color: var(--bg-primary);
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 16px;
+  font-family: monospace;
+  letter-spacing: 1px;
+}
+
+.service-type-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.service-type-count {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.service-type-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Extra Charges Grid */
+.extra-charges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.extra-charge-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.extra-charge-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.extra-charge-card.total-card {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border: 2px solid var(--bg-dark);
+}
+
+.extra-charge-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.extra-charge-count {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.extra-charge-amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.extra-charge-amount.total {
+  font-size: 28px;
+  color: var(--bg-dark);
+}
+
 /* Scrollbar styling */
 .main-table-container::-webkit-scrollbar {
   width: 8px;
@@ -367,8 +643,18 @@
   background: var(--text-secondary);
 }
 
-/* Responsive */
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .analysis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  .ocr-checkbox-group {
+    width: 100%;
+  }
+
   .main-table {
     font-size: 11px;
   }
@@ -378,40 +664,97 @@
     padding: 6px 4px;
   }
 
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .summary-value {
+    font-size: 24px;
+  }
+
+  .analysis-grid,
+  .service-types-grid,
+  .extra-charges-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-count {
+    font-size: 28px;
+  }
+
+  .analysis-amount {
+    font-size: 16px;
+  }
+
+  .service-type-amount {
     font-size: 20px;
   }
-  /* Selected Rate Info */
-    .selected-rate-info {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 20px;
+
+  .extra-charge-amount {
+    font-size: 20px;
+  }
+
+  .extra-charge-amount.total {
+    font-size: 24px;
+  }
+
+  .validation-status {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tamper-details {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .analysis-section {
     padding: 16px;
-    background: var(--bg-secondary);
-    border-radius: 8px;
-    flex-wrap: wrap;
-    }
+  }
 
-    .info-badge {
+  .analysis-card {
+    padding: 16px;
+  }
+
+  .service-type-card {
+    padding: 16px;
+  }
+
+  .extra-charge-card {
+    padding: 16px;
+  }
+  /* Review Status Badge */
+  .status-review {
+    background: #fef3c7;
+    color: #d97706;
+    border: 2px solid #f59e0b;
+  }
+
+  /* Extra Charges Summary in Validation Status */
+  .extra-charges-summary {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 20px;
     background: var(--bg-primary);
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    }
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+  }
 
-    .info-badge .info-label {
-    font-size: 13px;
+  .extra-charges-label {
+    font-size: 12px;
     color: var(--text-secondary);
-    font-weight: 500;
-    }
-
-    .info-badge .info-value {
-    font-size: 14px;
-    color: var(--text-primary);
     font-weight: 600;
-    }
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .extra-charges-value {
+    font-size: 26px;
+    font-weight: 1000;
+    color: var(--bg-dark);
+  }
+  
 
 }

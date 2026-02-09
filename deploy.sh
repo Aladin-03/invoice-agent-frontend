@@ -49,11 +49,10 @@ gcloud run deploy $APP_NAME \
   --allow-unauthenticated \
   --service-account $SERVICE_ACCOUNT \
   --max-instances 5 \
-  --min-instances 0 \
   --port 8080 \
-  --memory 512Mi \
-  --cpu 1 \
-  --timeout 300 \
+  --memory 4Gi \
+  --cpu 2000m \
+  --timeout 900 \
   --set-env-vars VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 if [ $? -ne 0 ]; then
