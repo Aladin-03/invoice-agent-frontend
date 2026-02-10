@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './InvoiceProcessing.css'
+import CustomRulesModal from './CustomRulesModal'
 
 function InvoiceProcessing({ 
   apiBaseUrl, 
@@ -13,6 +14,9 @@ function InvoiceProcessing({
   const [invoiceData, setInvoiceData] = useState(null)
   const [error, setError] = useState(null)
   const [enableOcr, setEnableOcr] = useState(false)
+  const [useCustomRules, setUseCustomRules] = useState(false)
+  const [customRates, setCustomRates] = useState(null)
+  const [showCustomRulesModal, setShowCustomRulesModal] = useState(false)
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
@@ -23,6 +27,19 @@ function InvoiceProcessing({
       setError('Please select a valid PDF file')
       setPdfFile(null)
     }
+  }
+
+  const handleOpenCustomRules = () => {
+    if (!selectedVendor || !selectedVersion) {
+      setError('Please select a vendor and version first')
+      return
+    }
+    setShowCustomRulesModal(true)
+  }
+
+  const handleSaveCustomRules = (rates) => {
+    setCustomRates(rates)
+    setError(null)
   }
 
   const handleProcessInvoice = async () => {
@@ -175,15 +192,52 @@ function InvoiceProcessing({
         
         {/* Display selected rate card info */}
         <div className="selected-rate-info">
-          <div className="info-badge">
+          <div className="info-badge" style={{ opacity: useCustomRules ? 0.5 : 1 }}>
             <span className="info-label">Selected Vendor:</span>
             <span className="info-value">{selectedVendorName}</span>
           </div>
-          <div className="info-badge">
+          <div className="info-badge" style={{ opacity: useCustomRules ? 0.5 : 1 }}>
             <span className="info-label">Selected Version:</span>
             <span className="info-value">{selectedVersionId}</span>
           </div>
         </div>
+
+        {/* Custom Rules Section */}
+        <div className="custom-rules-section">
+          <div className="custom-rules-checkbox">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={useCustomRules}
+                onChange={(e) => {
+                  setUseCustomRules(e.target.checked)
+                  if (!e.target.checked) {
+                    setCustomRates(null)
+                  }
+                }}
+                className="checkbox-input"
+              />
+              <span className="checkbox-text">Use custom rules</span>
+            </label>
+          </div>
+          
+          {useCustomRules && (
+            <button
+              className="button button-secondary"
+              onClick={handleOpenCustomRules}
+              style={{ maxWidth: '150px' }}
+            >
+              Set Rules
+            </button>
+          )}
+          
+          {useCustomRules && customRates && (
+            <span className="custom-rules-status">
+              ✓ Custom rules applied ({customRates.length} rates)
+            </span>
+          )}
+        </div>
+
 
         <div className="upload-section">
           <div className="file-upload-group">
@@ -512,6 +566,14 @@ function InvoiceProcessing({
           </div>
         </>
       )}
+      <CustomRulesModal
+        show={showCustomRulesModal}
+        onClose={() => setShowCustomRulesModal(false)}
+        selectedVendor={selectedVendor}
+        selectedVersion={selectedVersion}
+        apiBaseUrl={apiBaseUrl}
+        onSave={handleSaveCustomRules}
+      />
     </div>
   )
 }

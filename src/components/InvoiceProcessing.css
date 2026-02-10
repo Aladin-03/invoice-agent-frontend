@@ -755,6 +755,31 @@
     font-weight: 1000;
     color: var(--bg-dark);
   }
-  
+
+    /* Custom Rules Section */
+  .custom-rules-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .custom-rules-checkbox {
+    display: flex;
+    align-items: center;
+  }
+
+  .custom-rules-status {
+    font-size: 14px;
+    color: #059669;
+    font-weight: 600;
+    padding: 8px 16px;
+    background: #d1fae5;
+    border-radius: 6px;
+  }
 
 }
