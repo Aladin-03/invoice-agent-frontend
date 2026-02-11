@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './InvoiceProcessing.css'
 import CustomRulesModal from './CustomRulesModal'
+import ChargeDetailsModal from './ChargeDetailsModal'
 
 function InvoiceProcessing({ 
   apiBaseUrl, 
@@ -17,6 +18,18 @@ function InvoiceProcessing({
   const [useCustomRules, setUseCustomRules] = useState(false)
   const [customRates, setCustomRates] = useState(null)
   const [showCustomRulesModal, setShowCustomRulesModal] = useState(false)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [detailsModalData, setDetailsModalData] = useState({
+    title: '',
+    records: [],
+    type: ''
+  })
+
+  // Add function to open details modal
+  const handleShowDetails = (title, records, type) => {
+    setDetailsModalData({ title, records, type })
+    setShowDetailsModal(true)
+  }
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
@@ -455,7 +468,7 @@ function InvoiceProcessing({
                   <span className="summary-value">{formatCurrency(invoiceData.summary.header_total)}</span>
                 </div>
                 <div className="summary-item">
-                  <span className="summary-label">Total Discrepancy</span>
+                  <span className="summary-label">Total Discrepancy In Calculations</span>
                   <span className="summary-value discrepancy">
                     {formatCurrency(invoiceData.summary.total_discrepancy)}
                   </span>
@@ -485,15 +498,83 @@ function InvoiceProcessing({
                 </div>
               )}
 
-              {/* Total Extra Charges - always show if available */}
+              <div className="charges-summary-grid">
+              {/* Total Extra Charges */}
               {invoiceData.summary.extra_charges?.total_extra_charges !== undefined && (
-                <div className="extra-charges-summary">
-                  <span className="extra-charges-label">Total Extra Charges</span>
-                  <span className="extra-charges-value">
+                <div className="charge-summary-item">
+                  <span className="charge-label">Total Extra Charges</span>
+                  <span className="charge-value">
                     {formatCurrency(invoiceData.summary.extra_charges.total_extra_charges)}
                   </span>
                 </div>
               )}
+
+              {/* Total Under Charged */}
+              {invoiceData.summary.base_charges?.under_charged_amount > 0 && (
+                <div className="charge-summary-item undercharge">
+                  <span className="charge-label">Total Under Charged</span>
+                  <div className="charge-value-with-button">
+                    <span className="charge-value under">
+                      {formatCurrency(invoiceData.summary.base_charges.under_charged_amount)}
+                    </span>
+                    <button 
+                      className="details-button"
+                      onClick={() => handleShowDetails(
+                        'Under Charged Base Rates',
+                        invoiceData.summary.base_charges.under_charged_records,
+                        'under_charged'
+                      )}
+                    >
+                      See Details ({invoiceData.summary.base_charges.under_charged})
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Total Over Charged */}
+              {invoiceData.summary.base_charges?.over_charged_amount > 0 && (
+                <div className="charge-summary-item overcharge">
+                  <span className="charge-label">Total Over Charged</span>
+                  <div className="charge-value-with-button">
+                    <span className="charge-value over">
+                      {formatCurrency(invoiceData.summary.base_charges.over_charged_amount)}
+                    </span>
+                    <button 
+                      className="details-button"
+                      onClick={() => handleShowDetails(
+                        'Over Charged Base Rates',
+                        invoiceData.summary.base_charges.over_charged_records,
+                        'over_charged'
+                      )}
+                    >
+                      See Details ({invoiceData.summary.base_charges.over_charged})
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Invalid Charges */}
+              {invoiceData.summary.wkd_hol_ot?.invalid > 0 && (
+              <div className="charge-summary-item invalid">
+                <span className="charge-label">Invalid WKD/HOL/OT Charges</span>
+                <div className="charge-value-with-button">
+                  <span className="charge-value invalid">
+                    {formatCurrency(invoiceData.summary.wkd_hol_ot.invalid_amount)}
+                  </span>
+                  <button 
+                    className="details-button"
+                    onClick={() => handleShowDetails(
+                      'Invalid Weekend/Holiday/OT Charges',
+                      invoiceData.summary.wkd_hol_ot.invalid_records,
+                      'wkd_hol_ot_invalid'
+                    )}
+                  >
+                    See Details ({invoiceData.summary.wkd_hol_ot.invalid})
+                  </button>
+                </div>
+              </div>
+            )}
+            </div>
               
               {/* Tamper Details */}
               {invoiceData.summary.fraud_detected && (
@@ -634,6 +715,13 @@ function InvoiceProcessing({
         apiBaseUrl={apiBaseUrl}
         onSave={handleSaveCustomRules}
       />
+      <ChargeDetailsModal
+      show={showDetailsModal}
+      onClose={() => setShowDetailsModal(false)}
+      title={detailsModalData.title}
+      records={detailsModalData.records}
+      type={detailsModalData.type}
+    />
     </div>
   )
 }

@@ -837,5 +837,89 @@
     font-weight: 600;
   }
 
+  .charges-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .charge-summary-item {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .charge-summary-item.undercharge {
+    border-color: #f59e0b;
+    background: #fffbeb;
+  }
+
+  .charge-summary-item.overcharge {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+
+  .charge-summary-item.invalid {
+    border-color: #dc2626;
+    background: #fee2e2;
+  }
+
+  .charge-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .charge-value-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .charge-value {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--bg-dark);
+  }
+
+  .charge-value.under {
+    color: #d97706;
+  }
+
+  .charge-value.over {
+    color: #dc2626;
+  }
+
+  .charge-value.invalid {
+    color: #b91c1c;
+  }
+
+  .details-button {
+    padding: 8px 16px;
+    background: var(--bg-dark);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .details-button:hover {
+    background: var(--text-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
 
 }

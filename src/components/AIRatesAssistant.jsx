@@ -7,6 +7,7 @@ function AIRatesAssistant({ show, onClose, rateCardData, onApplyChanges, apiBase
   const [error, setError] = useState(null)
   const [aiResponse, setAiResponse] = useState(null)
   const [suggestedChanges, setSuggestedChanges] = useState(null)
+  const [warnings, setWarnings] = useState(null)
 
   const handleSubmit = async () => {
     if (!userPrompt.trim()) {
@@ -18,20 +19,30 @@ function AIRatesAssistant({ show, onClose, rateCardData, onApplyChanges, apiBase
     setError(null)
     setAiResponse(null)
     setSuggestedChanges(null)
+    setWarnings(null)
 
     try {
+      // Get list of available rate types from the rate card
+      const availableRateTypes = rateCardData.rates_by_vehicle[Object.keys(rateCardData.rates_by_vehicle)[0]]
+        .map(rate => rate.type)
+        .join(', ')
+
       // Prepare the prompt for the LLM
       const systemPrompt = `You are a rate card modification assistant. Given a rate card JSON structure and user instructions, you need to:
 1. Understand what the user wants to change
-2. Identify which specific rate values need to be modified
-3. Return a JSON object with the suggested changes
+2. Check if the requested rate types exist in the available rate types
+3. Identify which specific rate values need to be modified
+4. Return a JSON object with the suggested changes AND warnings for non-existent rate types
+
+AVAILABLE RATE TYPES IN THIS TEMPLATE:
+${availableRateTypes}
 
 The rate card structure is:
 ${JSON.stringify(rateCardData, null, 2)}
 
 Return ONLY a valid JSON object in this exact format:
 {
-  "explanation": "Brief explanation of changes",
+  "explanation": "Brief explanation of changes and any warnings",
   "changes": [
     {
       "vehicle_type": "cargo_van_sprinter",
@@ -40,19 +51,31 @@ Return ONLY a valid JSON object in this exact format:
       "new_value": 75,
       "reason": "Increased base rate as requested"
     }
+  ],
+  "warnings": [
+    {
+      "message": "Cannot update 'Fuel Charges' - this rate type does not exist in the template",
+      "requested_rate": "Fuel Charges",
+      "available_similar": ["Fuel Surcharge"]
+    }
   ]
 }
 
 Important rules:
 - vehicle_type must be one of: cargo_van_sprinter, car_suv_minivan, truck
-- rate_type must match exactly the type names in the rate card
-- Only suggest changes that make logical sense
+- rate_type must match EXACTLY the type names in the rate card (case-sensitive)
+- If user requests a rate type that doesn't exist, add it to warnings array with suggestions
+- Only suggest changes for rate types that actually exist in the template
 - Keep numeric values reasonable
-- For time formats (Standard Operating Hours), use HH:MM-HH:MM format`
+- For time formats (Standard Operating Hours), use HH:MM-HH:MM format
+- If a rate type doesn't exist, suggest similar available rate types in the warning`
 
       const userMessage = `User request: ${userPrompt}
 
-Please analyze the rate card and suggest specific changes based on this request.`
+Please analyze the rate card and:
+1. Suggest specific changes for rate types that exist
+2. Warn about any requested rate types that don't exist in the template
+3. Suggest similar available rate types when possible`
 
       // Call OpenAI API with GPT-4o mini
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -69,7 +92,7 @@ Please analyze the rate card and suggest specific changes based on this request.
           ],
           temperature: 0.3,
           max_tokens: 2000,
-          response_format: { type: "json_object" } // Force JSON response
+          response_format: { type: "json_object" }
         })
       })
 
@@ -85,6 +108,7 @@ Please analyze the rate card and suggest specific changes based on this request.
       const parsedResponse = JSON.parse(aiContent)
       setAiResponse(parsedResponse.explanation)
       setSuggestedChanges(parsedResponse.changes || [])
+      setWarnings(parsedResponse.warnings || [])
 
     } catch (err) {
       console.error('Error getting AI suggestions:', err)
@@ -161,6 +185,28 @@ Please analyze the rate card and suggest specific changes based on this request.
             </div>
           )}
 
+          {/* Warnings Section */}
+          {warnings && warnings.length > 0 && (
+            <div className="warnings-section">
+              <h3>⚠️ Warnings ({warnings.length}):</h3>
+              <div className="warnings-list">
+                {warnings.map((warning, index) => (
+                  <div key={index} className="warning-item">
+                    <div className="warning-icon">⚠️</div>
+                    <div className="warning-content">
+                      <div className="warning-message">{warning.message}</div>
+                      {warning.available_similar && warning.available_similar.length > 0 && (
+                        <div className="warning-suggestion">
+                          Did you mean: <strong>{warning.available_similar.join(', ')}</strong>?
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {suggestedChanges && suggestedChanges.length > 0 && (
             <div className="suggested-changes-section">
               <h3>Suggested Changes ({suggestedChanges.length}):</h3>
@@ -184,6 +230,13 @@ Please analyze the rate card and suggest specific changes based on this request.
               </div>
             </div>
           )}
+
+          {/* Show message when no changes can be applied */}
+          {!processing && warnings && warnings.length > 0 && (!suggestedChanges || suggestedChanges.length === 0) && (
+            <div className="no-changes-message">
+              <p>❌ No changes can be applied. All requested rate types are unavailable in this template.</p>
+            </div>
+          )}
         </div>
 
         <div className="modal-footer">
@@ -195,7 +248,7 @@ Please analyze the rate card and suggest specific changes based on this request.
             onClick={handleApplyChanges}
             disabled={!suggestedChanges || suggestedChanges.length === 0}
           >
-            Apply AI Suggestions
+            Apply AI Suggestions {suggestedChanges && suggestedChanges.length > 0 && `(${suggestedChanges.length})`}
           </button>
         </div>
       </div>
