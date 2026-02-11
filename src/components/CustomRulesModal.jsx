@@ -147,6 +147,24 @@ function CustomRulesModal({ show, onClose, selectedVendor, selectedVersion, apiB
         rates_by_vehicle: editedRates,
         vehicle_types: rateCardData.vehicle_types
       }
+
+      // Console logs for debugging
+        console.log('========================================')
+        console.log('📋 CUSTOM RATE CARD DATA')
+        console.log('========================================')
+        console.log('Vendor Code:', customVendorCode)
+        console.log('Vendor Name:', customVendorName)
+        console.log('Version ID:', customVersionId)
+        console.log('========================================')
+        console.log('🚗 VEHICLE TYPES:')
+        console.log(JSON.stringify(rateCardData.vehicle_types, null, 2))
+        console.log('========================================')
+        console.log('💰 RATES BY VEHICLE:')
+        console.log(JSON.stringify(editedRates, null, 2))
+        console.log('========================================')
+        console.log('📦 COMPLETE CUSTOM RULES DATA:')
+        console.log(JSON.stringify(customRulesData, null, 2))
+        console.log('========================================')
       
       onSave(customRulesData)
       onClose()

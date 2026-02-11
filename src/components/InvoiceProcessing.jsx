@@ -37,8 +37,20 @@ function InvoiceProcessing({
     setShowCustomRulesModal(true)
   }
 
-  const handleSaveCustomRules = (rates) => {
-    setCustomRates(rates)
+  const handleSaveCustomRules = (customRulesData) => {
+    console.log('========================================')
+    console.log('✅ RECEIVED CUSTOM RULES IN PARENT COMPONENT')
+    console.log('========================================')
+    console.log('Full Custom Rules Data:', customRulesData)
+    console.log('========================================')
+    console.log('Vendor:', customRulesData.vendor_code, '-', customRulesData.vendor_name)
+    console.log('Version:', customRulesData.version_id)
+    console.log('Total Vehicle Types:', Object.keys(customRulesData.vehicle_types).length)
+    console.log('Total Rate Categories per Vehicle:', Object.keys(customRulesData.rates_by_vehicle).length)
+    console.log('========================================')
+    
+    // Store the custom rates
+    setCustomRates(customRulesData)
     setError(null)
   }
 
@@ -48,14 +60,22 @@ function InvoiceProcessing({
       return
     }
 
-    if (!selectedVendor) {
-      setError('Please select a vendor from the Rate Cards section above')
-      return
-    }
+    // Validation changes based on custom rules usage
+    if (useCustomRules) {
+      if (!customRates) {
+        setError('Please set custom rules first by clicking "Set Rules"')
+        return
+      }
+    } else {
+      if (!selectedVendor) {
+        setError('Please select a vendor from the Rate Cards section above')
+        return
+      }
 
-    if (!selectedVersion) {
-      setError('Please select a rate card version from the Rate Cards section above')
-      return
+      if (!selectedVersion) {
+        setError('Please select a rate card version from the Rate Cards section above')
+        return
+      }
     }
 
     setProcessing(true)
@@ -63,9 +83,37 @@ function InvoiceProcessing({
     
     const formData = new FormData()
     formData.append('invoice_file', pdfFile)
-    formData.append('vendor_code', selectedVendor)
-    formData.append('version_id', selectedVersion)
     formData.append('enable_ocr', enableOcr)
+
+    // Check if using custom rules
+    if (useCustomRules && customRates) {
+      console.log('========================================')
+      console.log('🎯 PROCESSING INVOICE WITH CUSTOM RULES')
+      console.log('========================================')
+      console.log('Custom Vendor:', customRates.vendor_code)
+      console.log('Custom Version:', customRates.version_id)
+      console.log('Custom Rules Data:', customRates)
+      console.log('========================================')
+      
+      // Send custom rates
+      formData.append('use_custom_rates', 'true')
+      formData.append('custom_rates_json', JSON.stringify(customRates))
+      
+      // Still send vendor_code and version_id for reference
+      formData.append('vendor_code', customRates.vendor_code)
+      formData.append('version_id', customRates.version_id)
+    } else {
+      console.log('========================================')
+      console.log('📊 PROCESSING INVOICE WITH STANDARD RATES')
+      console.log('========================================')
+      console.log('Vendor:', selectedVendor)
+      console.log('Version:', selectedVersion)
+      console.log('========================================')
+      
+      formData.append('use_custom_rates', 'false')
+      formData.append('vendor_code', selectedVendor)
+      formData.append('version_id', selectedVersion)
+    }
 
     try {
       const response = await fetch(`${apiBaseUrl}/api/invoices/parse`, {
@@ -78,9 +126,14 @@ function InvoiceProcessing({
       if (result.success) {
         setInvoiceData(result.data)
         setError(null)
+        
+        // Log success
+        console.log('✅ Invoice processed successfully')
+        console.log('Result:', result)
       } else {
         setError(result.message || 'Failed to process invoice')
         setInvoiceData(null)
+        console.error('❌ Invoice processing failed:', result.message)
       }
     } catch (err) {
       console.error('Error processing invoice:', err)
@@ -90,6 +143,7 @@ function InvoiceProcessing({
     
     setProcessing(false)
   }
+
 
   const handleDownloadTemplate = () => {
     const link = document.createElement('a')
@@ -232,9 +286,15 @@ function InvoiceProcessing({
           )}
           
           {useCustomRules && customRates && (
-            <span className="custom-rules-status">
-              ✓ Custom rules applied ({customRates.length} rates)
-            </span>
+            <div className="custom-rules-status">
+              <span className="status-icon">✓</span>
+              <div className="status-details">
+                <span className="status-title">Custom rules applied</span>
+                <span className="status-info">
+                  {customRates.vendor_name} ({customRates.vendor_code}) - {customRates.version_id}
+                </span>
+              </div>
+            </div>
           )}
         </div>
 
@@ -269,10 +329,10 @@ function InvoiceProcessing({
           <button
             className="button button-full"
             onClick={handleProcessInvoice}
-            disabled={!pdfFile || !selectedVendor || !selectedVersion || processing}
+            disabled={!pdfFile || (!useCustomRules && (!selectedVendor || !selectedVersion)) || (useCustomRules && !customRates) || processing}
             style={{ maxWidth: '200px' }}
           >
-            {processing ? 'Processing...' : 'Process Invoice'}
+            {processing ? 'Processing...' : useCustomRules ? 'Process with Custom Rules' : 'Process Invoice'}
           </button>
 
           <button
