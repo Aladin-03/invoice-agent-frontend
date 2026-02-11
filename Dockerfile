@@ -12,12 +12,24 @@ RUN npm ci
 # Copy all source files
 COPY . .
 
-# Build argument for API URL
+# Build arguments - these MUST be declared before ENV
 ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ARG VITE_OPENAI_API_KEY
 
-# Build the app
+# Print for debugging (will show in build logs)
+RUN echo "Building with API URL: $VITE_API_BASE_URL"
+RUN echo "API Key length: $(echo $VITE_OPENAI_API_KEY | wc -c)"
+
+# Set as environment variables for Vite build
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_OPENAI_API_KEY=$VITE_OPENAI_API_KEY
+
+# Build the app (Vite will read these env vars)
 RUN npm run build
+
+# Verify the build output contains the env vars
+RUN echo "Checking if env vars are in bundle..." && \
+    grep -r "VITE_API_BASE_URL" dist/ || echo "Warning: VITE_API_BASE_URL not found in bundle"
 
 # Production stage
 FROM nginx:alpine

@@ -1,0 +1,28 @@
+steps:
+  # Build the container image with build args
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'VITE_API_BASE_URL=${_VITE_API_BASE_URL}'
+      - '--build-arg'
+      - 'VITE_OPENAI_API_KEY=${_VITE_OPENAI_API_KEY}'
+      - '-t'
+      - '${_IMAGE_NAME}'
+      - '.'
+    timeout: 1200s
+
+images:
+  - '${_IMAGE_NAME}'
+
+substitutions:
+  _VITE_API_BASE_URL: 'default-value'
+  _VITE_OPENAI_API_KEY: 'default-value'
+  _IMAGE_NAME: '${LOCATION}-docker.pkg.dev/${PROJECT_ID}/invoice-agent-frontend/invoice-agent-frontend:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+  substitutionOption: 'ALLOW_LOOSE'
+
+timeout: 1200s
